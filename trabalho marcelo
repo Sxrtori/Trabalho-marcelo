@@ -1,0 +1,321 @@
+AgendaSwing.java
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+public class AgendaSwing {
+    private static Agenda agenda = new Agenda();
+    private static final String TITULO_FRAME = "Agenda de Contatos";
+
+    public static void main(String[] args) {
+        criarFrame();
+    }
+
+    private static void criarFrame() {
+        JFrame frame = new JFrame(TITULO_FRAME);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(400, 400);
+        frame.setLayout(new BorderLayout());
+
+        JTextArea textArea = new JTextArea();
+        textArea.setEditable(false);
+        JScrollPane scrollPane = new JScrollPane(textArea);
+        frame.add(scrollPane, BorderLayout.CENTER);
+
+        JPanel panel = criarPainelCampos();
+        frame.add(panel, BorderLayout.NORTH);
+
+        configurarListeners(panel, textArea);
+
+        frame.setVisible(true);
+    }
+
+    private static JPanel criarPainelCampos() {
+        JPanel panel = new JPanel();
+        panel.setLayout(new GridBagLayout());
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        panel.add(new JLabel("Nome:"), gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 0;
+        JTextField nomeField = new JTextField(20);
+        panel.add(nomeField, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        panel.add(new JLabel("Telefone:"), gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 1;
+        JTextField telefoneField = new JTextField(20);
+        panel.add(telefoneField, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        panel.add(new JLabel("Email:"), gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 2;
+        JTextField emailField = new JTextField(20);
+        panel.add(emailField, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        JButton adicionarButton = new JButton("Adicionar Contato");
+        panel.add(adicionarButton, gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 3;
+        JButton listarButton = new JButton("Listar Contatos");
+        panel.add(listarButton, gbc);
+
+        return panel;
+    }
+
+    private static void configurarListeners(JPanel panel, JTextArea textArea) {
+        JTextField nomeField = (JTextField) panel.getComponent(1);
+        JTextField telefoneField = (JTextField) panel.getComponent(3);
+        JTextField emailField = (JTextField) panel.getComponent(5);
+        JButton adicionarButton = (JButton) panel.getComponent(7);
+        JButton listarButton = (JButton) panel.getComponent(9);
+
+        adicionarButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String nome = nomeField.getText();
+                String telefone = telefoneField.getText();
+                String email = emailField.getText();
+
+                if (!nome.isEmpty() && !telefone.isEmpty() && !email.isEmpty()) {
+                    Contato contato = new Contato(nome, telefone, email);
+                    agenda.adicionarContato(contato);
+                    nomeField.setText("");
+                    telefoneField.setText("");
+                    emailField.setText("");
+                    JOptionPane.showMessageDialog(panel, "Contato adicionado!");
+                } else {
+                    JOptionPane.showMessageDialog(panel, "Por favor, preencha todos os campos.");
+                }
+            }
+        });
+
+        listarButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                StringBuilder listaContatos = new StringBuilder();
+                for (Contato contato : agenda.listarContatos()) {
+                    listaContatos.append(contato).append("\n");
+                }
+                textArea.setText(listaContatos.toString());
+            }
+        });
+    }
+}
+
+Contato.java
+
+import java.util.Objects;
+public class Contato {
+    private String nome;
+    private String telefone;
+    private String email;
+
+    public Contato(String nome, String telefone, String email) {
+        this.nome = nome;
+        this.telefone = telefone;
+        this.email = email;
+    }
+
+    public String getNome() {
+        return nome;
+    }
+
+    public void setNome(String nome) {
+        this.nome = nome;
+    }
+
+    public String getTelefone() {
+        return telefone;
+    }
+
+    public void setTelefone(String telefone) {
+        this.telefone = telefone;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    @Override
+    public String toString() {
+        return "Nome: " + nome + ", Telefone: " + telefone + ", Email: " + email;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        Contato contato = (Contato) obj;
+        return nome.equals(contato.nome) && telefone.equals(contato.telefone) && email.equals(contato.email);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(nome, telefone, email);
+    }
+}
+
+
+Agenda.java
+
+import java.util.ArrayList;
+import java.util.Optional;
+
+public class Agenda {
+    private ArrayList<Contato> contatos;
+
+    public Agenda() {
+        contatos = new ArrayList<>();
+    }
+
+    public void adicionarContato(Contato contato) {
+        contatos.add(contato);
+    }
+
+    public boolean removerContato(String nome) {
+        return contatos.removeIf(contato -> contato.getNome().equalsIgnoreCase(nome));
+    }
+
+    public Optional<Contato> buscarContato(String nome) {
+        return contatos.stream()
+                .filter(contato -> contato.getNome().equalsIgnoreCase(nome))
+                .findFirst();
+    }
+
+    public ArrayList<Contato> listarContatos() {
+        return new ArrayList<>(contatos);
+    }
+}
+
+
+AgendaConsole.java
+
+import java.util.Scanner;
+import java.util.InputMismatchException;
+
+public class AgendaConsole {
+    private static Scanner scanner = new Scanner(System.in);
+    private static Agenda agenda = new Agenda();
+
+    public static void main(String[] args) {
+        while (true) {
+            try {
+                mostrarMenu();
+                int opcao = scanner.nextInt();
+                scanner.nextLine();
+
+                switch (opcao) {
+                    case 1:
+                        adicionarContato();
+                        break;
+                    case 2:
+                        listarContatos();
+                        break;
+                    case 3:
+                        buscarContato();
+                        break;
+                    case 4:
+                        removerContato();
+                        break;
+                    case 5:
+                        System.out.println("Saindo...");
+                        return;
+                    default:
+                        System.out.println("Opção inválida. Tente novamente.");
+                }
+            } catch (InputMismatchException e) {
+                System.out.println("Erro: Insira um número válido.");
+                scanner.nextLine();
+            }
+        }
+    }
+
+    private static void mostrarMenu() {
+        System.out.println("\n--- Menu da Agenda ---");
+        System.out.println("1. Adicionar Contato");
+        System.out.println("2. Listar Contatos");
+        System.out.println("3. Buscar Contato");
+        System.out.println("4. Remover Contato");
+        System.out.println("5. Sair");
+        System.out.print("Escolha uma opção: ");
+    }
+
+    private static void adicionarContato() {
+        System.out.print("Nome: ");
+        String nome = scanner.nextLine();
+        System.out.print("Telefone: ");
+        String telefone = scanner.nextLine();
+        System.out.print("Email: ");
+        String email = scanner.nextLine();
+
+        if (nome.isEmpty() || telefone.isEmpty() || email.isEmpty()) {
+            System.out.println("Erro: Preencha todos os campos.");
+            return;
+        }
+
+        Contato contato = new Contato(nome, telefone, email);
+        agenda.adicionarContato(contato);
+        System.out.println("Contato adicionado!");
+    }
+
+    private static void listarContatos() {
+        System.out.println("\n--- Lista de Contatos ---");
+        if (agenda.listarContatos().isEmpty()) {
+            System.out.println("Nenhum contato encontrado.");
+        } else {
+            for (Contato contato : agenda.listarContatos()) {
+                System.out.println(contato);
+            }
+        }
+    }
+
+    private static void buscarContato() {
+        System.out.print("Digite o nome do contato a buscar: ");
+        String nome = scanner.nextLine();
+
+        Contato contato = agenda.buscarContato(nome).orElse(null);
+        if (contato != null) {
+            System.out.println(contato);
+        } else {
+            System.out.println("Contato não encontrado.");
+        }
+    }
+
+    private static void removerContato() {
+        System.out.print("Digite o nome do contato a remover: ");
+        String nome = scanner.nextLine();
+
+        if (agenda.removerContato(nome)) {
+            System.out.println("Contato removido.");
+        } else {
+            System.out.println("Contato não encontrado.");
+        }
+    }
+}
+
+
